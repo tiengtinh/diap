@@ -1,14 +1,19 @@
 {
-   "name":"APPNAME",
-   "description":"DESCRIPTIONHERE",
+   "name":"diap",
+   "description":"Dependancy Injection with routing support for ExpressJs project",
    "version":"0.0.1",
-   "homepage":"http://github.com/wearefractal/APPNAME",
-   "repository":"git://github.com/wearefractal/APPNAME.git",
-   "author":"Fractal <contact@wearefractal.com> (http://wearefractal.com/)",
+   "homepage":"https://github.com/tiengtinh/diap",
+   "repository":"git://github.com/tiengtinh/diap.git",
+   "author":"TiengTinh <tiengtinh@gmail.com>",
    "main":"./index.js",
    
    "dependencies":{
-      "coffee-script":"*"
+      "coffee-script":"1.6.3",
+      "underscore":"1.5.2",
+      "underscore.string":"2.3.3",
+      "di":"0.0.1",
+      "cli-color":"0.2.3"
+
    },
    "devDependencies":{
       "mocha":"*",
@@ -23,7 +28,7 @@
    "licenses":[
       {
          "type":"MIT",
-         "url":"http://github.com/wearefractal/APPNAME/raw/master/LICENSE"
+         "url":"http://github.com/tiengtinh/diap/raw/master/LICENSE"
       }
    ]
 }

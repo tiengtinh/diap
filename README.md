@@ -1,50 +1,87 @@
-[![Build Status](https://travis-ci.org/wearefractal/APPNAME.png?branch=master)](https://travis-ci.org/wearefractal/APPNAME)
+## Diap
 
-[![NPM version](https://badge.fury.io/js/APPNAME.png)](http://badge.fury.io/js/APPNAME)
+ependancy Injection with routing support for ExpressJs project
 
-## Information
-
-<table>
-<tr> 
-<td>Package</td><td>APPNAME</td>
-</tr>
-<tr>
-<td>Description</td>
-<td>DESCRIPTIONHERE</td>
-</tr>
-<tr>
-<td>Node Version</td>
-<td>>= 0.4</td>
-</tr>
-</table>
-
-## Usage
-
-```coffee-script
-NOTHING HERE YET
+```
+install diap
 ```
 
-## LICENSE
+## Example Usage
 
-(MIT License)
+server.coffee
+```coffeescript
+diap          = require('diap')
 
-Copyright (c) 2013 Fractal <contact@wearefractal.com>
+diap.setup(
+	app: app
+	scanFolders: [fs.realpathSync('./server/app')]
+	routes: require('./routes')
+	classPostfixs: [ #filename with these postfix would be Class Type (autowired with new OuserService()). Others are value type
+		'_controller'
+		'_service'
+	]
+	globalMiddlewares: 
+		whenNot: 
+			public: (res, req, next) ->
+				console.log 'whenNot middleware'
+				next()
+		#when:
+)
+```
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+routes.coffee
+```coffeescript
+routes = [	
+	{
+		path: '/api/user',
+		method: 'GET',
+		run: [ 
+			'apiController.users'
+		]
+	}
+	{
+		path: '/api/test',
+		method: 'GET',
+		run: [ 
+			'apiController.test'
+		]
+	}
+	{
+		path: '/partial/:name',
+		method: 'GET',
+		run: [ 
+			(req, res, next) ->
+				console.log 'before partial'
+				next()
+			(req, res) ->
+				res.render('partials/' + req.params.name)
+		]
+		public: true
+	}
+	{
+		path: '*',
+		method: 'GET',
+		run: [ 
+			'serverController.layout'
+		]
+		public: true
+	}
+]
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+module.exports = routes
+```
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+api_controller.coffee
+```coffeescript
+class ApiController
+	constructor: (@ouserService) ->
+
+	users: (req, res) =>   
+		@ouserService.list().then (users) ->
+			res.json users
+
+	test: (req, res) =>   		
+		res.json 'test'
+
+module.exports = ApiController
+```
