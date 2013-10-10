@@ -1,4 +1,4 @@
 #!/usr/bin/env node
 
 require('coffee-script');
-module.exports = require('./lib/main');
+module.exports = require('./lib/diap');

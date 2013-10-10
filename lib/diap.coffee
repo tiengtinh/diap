@@ -56,17 +56,42 @@ class AppLoader
 						routes[route_i].run[run_i] = insFun
 
 				if globalMiddlewares and globalMiddlewares.when
-					unshiftedMiddleware = []
+					unshiftedMiddleware = []			
+
 					for name, func of globalMiddlewares.when
-						if route[name]
-							unshiftedMiddleware.push func
+						if route[name] #check the current route satisfy the condition to have this middleware
+							if typeof func is 'string' #is a string reference to a class.function
+								insFun = null
+								instance = func.split('.')[0]
+								method   = func.split('.')[1]
+								eval("""
+									injector.invoke(function(#{instance}) {
+										insFun = #{instance}.#{method}
+									})
+								""")
+								unshiftedMiddleware.push insFun
+							else # is a function
+								unshiftedMiddleware.push func
+
 					route.run.unshift.apply route.run, unshiftedMiddleware
 
 				if globalMiddlewares and globalMiddlewares.whenNot
 					unshiftedMiddleware = []
 					for name, func of globalMiddlewares.whenNot
-						if !route[name]
-							unshiftedMiddleware.push func
+						if !route[name] #check the current route satisfy the condition to have this middleware
+							if typeof func is 'string' #is a string reference to a class.function
+								insFun = null
+								instance = func.split('.')[0]
+								method   = func.split('.')[1]
+								eval("""
+									injector.invoke(function(#{instance}) {
+										insFun = #{instance}.#{method}
+									})
+								""")
+								unshiftedMiddleware.push insFun
+							else # is a function
+								unshiftedMiddleware.push func
+								
 					route.run.unshift.apply route.run, unshiftedMiddleware
 
 				args = _.flatten([route.path, route.run])
