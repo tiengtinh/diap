@@ -1,7 +1,7 @@
 {
    "name":"diap",
    "description":"Dependancy Injection with routing support for ExpressJs project",
-   "version":"0.0.2",
+   "version":"0.0.6",
    "homepage":"https://github.com/tiengtinh/diap",
    "repository":"git://github.com/tiengtinh/diap.git",
    "author":"TiengTinh <tiengtinh@gmail.com>",

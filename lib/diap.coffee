@@ -6,8 +6,8 @@ clc   = require('cli-color')
 g_injector = null
 
 class AppLoader
-	constructor: (app, scanFolders, classPostfixs, routes, globalMiddlewares) ->    
-	
+	constructor: (app, scanFolders, type_endWith, factory_endWith, routes, globalMiddlewares) ->    
+		
 		controllers = []
 		files = []
 
@@ -15,19 +15,26 @@ class AppLoader
 			'app': ['value', app]
 
 		for folder in scanFolders			
-			filesInFolder = @getFileNamesIn(folder, classPostfixs)			
+			filesInFolder = @getFileNamesIn(folder, type_endWith, factory_endWith)			
 			files = files.concat(filesInFolder)
 		console.log('')				
 
 		files.forEach (file) ->			
-			module[if file.isClass then file.instanceName else file.className] = [
-				if file.isClass then 'type' else 'value'
+			module[if file.injectType is 'value' then file.className  else file.instanceName] = [
+				file.injectType
 				file.source
 			]
+			
+			if file.injectType is 'type' then controllers.push file.instanceName
 
-			if file.isClass then controllers.push file.instanceName
+		g_injector = injectorMaster = new di.Injector([module])
 
-		g_injector = injector = new di.Injector([module])	
+		#set up a master module to inject the master injector object
+		injectorModule = new di.Module
+		injectorModule.value 'injector', injectorMaster
+		injector = injectorMaster.createChild [injectorModule]
+
+
 		console.log 'controllers', controllers
 
 		if not routes
@@ -47,8 +54,7 @@ class AppLoader
 				if controllerClass.routes					
 					controllerClass.routes.forEach (route, route_i) ->						
 						route.run.forEach (run, run_i) ->
-							route.run[run_i] = controllers[controller_i] + '.' + run
-							console.log 'run', run
+							route.run[run_i] = controllers[controller_i] + '.' + run							
 					
 					routes = routes.concat controllerClass.routes
 			
@@ -132,7 +138,7 @@ class AppLoader
 					throw new Error('Invalid HTTP method specified for route ' + route.path)			
 		
 
-	getFileNamesIn: (folder, classPostfixs) ->
+	getFileNamesIn: (folder, type_endWith, factory_endWith) ->
 		result = []
 		
 		filos = fs.readdirSync folder #filos = files and folders
@@ -145,19 +151,24 @@ class AppLoader
 					console.info clc.cyan(filo)
 					filename = @filenamize filo
 					instanceName = @camelize filename
-					className = @capitalize instanceName
-					isClass = @isClassType filename, classPostfixs
+					className = @capitalize instanceName						
+					if @isEndWithOfArray(filename, type_endWith) 
+						injectType = 'type' 
+					else if @isEndWithOfArray(filename, factory_endWith)
+						injectType = 'factory' 
+					else 
+						injectType = 'value'
 					file = 
 						fileName 		: filename
 						className		: className
 						instanceName	: instanceName
-						isClass 		: isClass						
+						injectType 		: injectType						
 						source		 	: require(path.join(folder, filo))
 					
 					result.unshift file
 
 				else #a folder
-					@getFileNamesIn(path.join(folder, filo), classPostfixs).forEach (file) ->
+					@getFileNamesIn(path.join(folder, filo), type_endWith, factory_endWith).forEach (file) ->
 						result.push file
 
 		result
@@ -181,10 +192,11 @@ class AppLoader
 		str.length >= ends.length && str.slice(str.length - ends.length) == ends
 
 	isFile: (name) ->
-		@endsWith(name, '.coffee')		
+		@endsWith(name, '.coffee') or @endsWith(name, '.js')
 
-	isClassType: (name, classPostfixs) ->
-		for each in classPostfixs			
+	isEndWithOfArray: (name, array) ->
+		if not array then return false
+		for each in array			
 			if @endsWith(name, each)   
 				return true
 		false
@@ -202,9 +214,12 @@ diap =
 		defaults = 
 			app: null
 			scanFolders: []
-			classPostfixs: [
+			type_endWith: [
 				'_controller'
 				'_service'
+			]
+			factory_endWith: [
+				#'_fn'				
 			]
 			routes: null
 			globalMiddlewares:
@@ -213,7 +228,7 @@ diap =
 		
 		options = defaults extends options
 		
-		new AppLoader(options.app, options.scanFolders, options.classPostfixs, options.routes, options.globalMiddlewares)	
+		new AppLoader(options.app, options.scanFolders, options.type_endWith, options.factory_endWith, options.routes, options.globalMiddlewares)	
 
 
 module.exports = 
