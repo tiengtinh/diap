@@ -1,6 +1,6 @@
 ## Diap
 
-ependancy Injection with routing support for ExpressJs project
+Dependancy Injection with routing support for ExpressJs project
 
 ```
 install diap
